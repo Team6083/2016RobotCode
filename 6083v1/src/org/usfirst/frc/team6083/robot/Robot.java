@@ -1,19 +1,19 @@
 
 package org.usfirst.frc.team6083.robot;
 
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-
 import com.ni.vision.NIVision;
 import com.ni.vision.NIVision.DrawMode;
 import com.ni.vision.NIVision.Image;
 import com.ni.vision.NIVision.ShapeMode;
 
-import edu.wpi.first.wpilibj.*;
-import edu.wpi.first.wpilibj.buttons.JoystickButton;
-import edu.wpi.first.wpilibj.vision.USBCamera;
-
-
+//import defined part
+import Systems.CANDriveAssembly;
+import Systems.PWMDriveAssembly;
+import edu.wpi.first.wpilibj.CameraServer;
+import edu.wpi.first.wpilibj.IterativeRobot;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -23,38 +23,23 @@ import edu.wpi.first.wpilibj.vision.USBCamera;
  * directory.
  */
 public class Robot extends IterativeRobot {
-    final String defaultAuto = "Default";
-    final String customAuto = "My Auto";
-    String autoSelected;
-    SendableChooser chooser;
-    
-    
-    //motor
-    VictorSP motor_left = new VictorSP(1);
-    VictorSP motor_right = new VictorSP(0);
-    VictorSP hand1 = new VictorSP(2);
-    
-    //Joystick
-    Joystick joy = new Joystick(0);
-    JoystickButton left = new JoystickButton(joy,5);
-    JoystickButton right = new JoystickButton(joy,6);
-    JoystickButton A = new JoystickButton(joy,1);
-    JoystickButton B = new JoystickButton(joy,2);
-    
-    //Device
-    PowerDistributionPanel pdp = new PowerDistributionPanel(1);
-    Compressor comp = new Compressor(0);
-    
-    //SmartDashboard
-    Preferences pref;
-    
-    //camera
+	
     int session;
     Image frame;
+	
+    final String defaultAuto = "Default";
+    final String customAuto = "My Auto";
+
+    String autoSelected;
+    SendableChooser chooserAuto;
+	
+    final String defaultTele = "Normal";
+    final String pidTele = "pid_test";
+    final String currentTele = "talon_current_test";
     
-    //Double
-    Double LY;
-    Double RY;
+    String teleSelected;
+    SendableChooser chooserTele;
+    // add Auto and Teleop chooser
     
     
     /**
@@ -62,19 +47,26 @@ public class Robot extends IterativeRobot {
      * used for any initialization code.
      */
     public void robotInit() {
-        chooser = new SendableChooser();
-        chooser.addDefault("Default Auto", defaultAuto);
-        chooser.addObject("My Auto", customAuto);
-        SmartDashboard.putData("Auto choices", chooser);
+        chooserAuto = new SendableChooser();
+        chooserTele = new SendableChooser();
+        chooserAuto.addDefault("Default Auto", defaultAuto);
+        chooserAuto.addObject("My Auto", customAuto);
+        chooserTele.addDefault("Normal", defaultTele);
+        chooserTele.addObject("pid_test", pidTele);
+        chooserTele.addObject("talon_current_test", currentTele);
+        SmartDashboard.putData("Auto choices", chooserAuto);
+        SmartDashboard.putData("Tele choices", chooserTele);
         
         
+        CANDriveAssembly.init();//init CANDevice
+    	PWMDriveAssembly.init();//init PWMDevice
+    	
         frame = NIVision.imaqCreateImage(NIVision.ImageType.IMAGE_RGB, 0);
 
         // the camera name (ex "cam0") can be found through the roborio web interface
         session = NIVision.IMAQdxOpenCamera("cam0",
                 NIVision.IMAQdxCameraControlMode.CameraControlModeController);
         NIVision.IMAQdxConfigureGrab(session);
-        
     }
     
 	/**
@@ -87,7 +79,7 @@ public class Robot extends IterativeRobot {
 	 * If using the SendableChooser make sure to add them to the chooser code above as well.
 	 */
     public void autonomousInit() {
-    	autoSelected = (String) chooser.getSelected();
+    	autoSelected = (String) chooserAuto.getSelected();
 //		autoSelected = SmartDashboard.getString("Auto Selector", defaultAuto);
 		System.out.println("Auto selected: " + autoSelected);
     }
@@ -103,6 +95,8 @@ public class Robot extends IterativeRobot {
     	case defaultAuto:
     	default:
     	//Put default auto code here
+    		
+    		
             break;
     	}
     }
@@ -110,8 +104,16 @@ public class Robot extends IterativeRobot {
     /**
      * This function is called periodically during operator control
      */
+    public void teleopInit(){
+    	teleSelected = (String) chooserTele.getSelected();
+    	System.out.println("Tele selected: " + teleSelected);
+    	
+    	
+    }
+    
+    
+    
     public void teleopPeriodic() {
-
     	NIVision.IMAQdxStartAcquisition(session);
 
         /**
@@ -129,43 +131,17 @@ public class Robot extends IterativeRobot {
             CameraServer.getInstance().setImage(frame);
 
             /** robot code here! **/
-        	Double SpeedControal = 2.0;
+            
+        	switch(teleSelected) {
         	
-        	if(joy.getRawAxis(1)>0.1 || joy.getRawAxis(1)<-0.1){		
-                LY = joy.getRawAxis(1);
-            }	
-            else{
-                LY = 0.0 ;	
-            }	
-        	if(joy.getRawAxis(5)>0.1 || joy.getRawAxis(5)<-0.1){		
-                RY = joy.getRawAxis(5);
-            }	
-            else{
-                RY = 0.0 ;	
-            }	
-        	if(left.get()){
-        		motor_left.set(LY/SpeedControal);                     	
-        	}	
-        	else {
-        		motor_left.set(LY/(SpeedControal*2));
+        	
+        	case defaultTele:
+        	default:
+            	CANDriveAssembly.teleopPreiodic();//CANDrive teleop mode
+            	PWMDriveAssembly.teleopPeriodic();//PWMDrive teleop mode
+        		break;
         	}
-        	
-        	if(right.get()){
-        		motor_right.set(-RY/SpeedControal);                     	
-        	}	
-        	else {
-        		motor_right.set(-RY/(SpeedControal*2));
-        	}
-        	
-        	
-
-        	SmartDashboard.putNumber("Left Motor Encoder Value", -motor_left.get());
-        	SmartDashboard.putNumber("Right Motor Encoder Value", motor_right.get());
-        	SmartDashboard.putNumber("spSpeedControaleed", (-motor_left.get()+ motor_right.get())/2);
-        	SmartDashboard.putNumber("Speed Plot", (-motor_left.get()+ motor_right.get())/2);
-        	SmartDashboard.putNumber("LY value", joy.getRawAxis(1));
-        	SmartDashboard.putNumber("RY value", joy.getRawAxis(5));
-        	SmartDashboard.putNumber("PDP Voltage", pdp.getVoltage());
+            
         }
         NIVision.IMAQdxStopAcquisition(session);
     	
@@ -175,7 +151,8 @@ public class Robot extends IterativeRobot {
      * This function is called periodically during test mode
      */
     public void testPeriodic() {
-    
+    	
     }
+    
     
 }
