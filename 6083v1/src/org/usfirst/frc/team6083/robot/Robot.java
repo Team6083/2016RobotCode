@@ -9,6 +9,7 @@ import com.ni.vision.NIVision.ShapeMode;
 //import defined part
 import Systems.CANDriveAssembly;
 import Systems.PWMDriveAssembly;
+import Systems.Ultrasonic_sensor;
 import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Timer;
@@ -60,6 +61,7 @@ public class Robot extends IterativeRobot {
         
         CANDriveAssembly.init();//init CANDevice
     	PWMDriveAssembly.init();//init PWMDevice
+    	Ultrasonic_sensor.init();
     	
     }
     
@@ -117,6 +119,7 @@ public class Robot extends IterativeRobot {
         	default:
             	CANDriveAssembly.teleopPreiodic();//CANDrive teleop mode
             	PWMDriveAssembly.teleopPeriodic();//PWMDrive teleop mode
+            	Ultrasonic_sensor.teleop();
         		break;
         	}
 
