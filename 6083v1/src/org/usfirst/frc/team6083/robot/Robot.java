@@ -115,7 +115,7 @@ public class Robot extends IterativeRobot {
         	
         	case defaultTele:
         	default:
-            	//CANDriveAssembly.teleopPreiodic();//CANDrive teleop mode
+            	CANDriveAssembly.teleopPreiodic();//CANDrive teleop mode
             	PWMDriveAssembly.teleopPeriodic();//PWMDrive teleop mode
         		break;
         	}
