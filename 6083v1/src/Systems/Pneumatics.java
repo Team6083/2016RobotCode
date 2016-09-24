@@ -13,8 +13,8 @@ public class Pneumatics {
 	
 	//device id
 	private static final int comp_id = 0;
-	private static final int twoway_forward_id[] = {0,2};
-	private static final int twoway_reverse_id[] = {1,3};
+	private static final int twoway_forward_id[] = {0};
+	private static final int twoway_reverse_id[] = {1};
 	private static final int oneway_id[] = {};
 	
 	//device
@@ -41,6 +41,7 @@ public class Pneumatics {
 				oneway[b] = new Solenoid(oneway_id[b]);
 			}
 			JoyDrive.init();
+			comp.setClosedLoopControl(false);
 		}
 		
 	}
@@ -54,29 +55,20 @@ public class Pneumatics {
 				twoway_control(0, 1);
 			}
 			else{
-				twoway_control(0, 2);
+				twoway_control(0, 3);
 			}
 		}
 		
 		if(JoyDrive.joy_x){
-			if(twoway[1].get() == DoubleSolenoid.Value.kForward){
-				twoway_control(1, 2);
+			if(comp.getClosedLoopControl() == true){
+				comp.setClosedLoopControl(false);
 			}
-			else if(twoway[0].get() == DoubleSolenoid.Value.kReverse){
-				twoway_control(1, 1);
-			}
-			else{
-				twoway_control(1, 2);
+			else if(comp.getClosedLoopControl() ==false){
+				comp.setClosedLoopControl(true);
 			}
 		}
 		
-		if(JoyDrive.joy_b){
-			twoway_control(0, 3);
-		}
 		
-		if(JoyDrive.joy_y){
-			twoway_control(0, 3);
-		}
 	}
 	
 	public static void twoway_control(int num,int mode){
