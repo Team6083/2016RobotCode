@@ -19,6 +19,10 @@ public class Ultrasonic_sensor {
 	
 	public static void teleop(){
 		distance=ultra.getRangeMM()/10;
+		if(ultra.isRangeValid()){
 		SmartDashboard.putNumber("distance(cm)", distance);
+	}else {
+		SmartDashboard.putNumber("distance(cm)", 0);
+	}
 	}
 	}
